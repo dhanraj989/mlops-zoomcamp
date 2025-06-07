@@ -1,0 +1,11 @@
+.DS_Store
+.file_versions
+.gitkeep
+.log
+.logs/
+.mage_temp_profiles
+.preferences.yaml
+__pycache__/
+docker-compose.override.yml
+logs/
+secrets/
