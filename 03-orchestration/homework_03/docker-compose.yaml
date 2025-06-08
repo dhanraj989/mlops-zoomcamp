@@ -1,14 +1,58 @@
-version: '3'
+version: "3"
+
 services:
-  mage:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    networks:
+      - airflow-net
+
+  airflow-webserver:
     build:
       context: .
-      dockerfile: mage.dockerfile
-    ports:
-      - "6789:6789"
+      dockerfile: airflow.dockerfile
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__WEBSERVER__SECRET_KEY: "6FG_Lrgt7uE4xqyXHoQSryr7M9ua5c1B2Klo3q_ZBls"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    depends_on:
+      - postgres
     volumes:
-      - .:/home/src
-    command: mage start homework_03
+      - ./dags:/opt/airflow/dags
+      - ./data:/opt/airflow/data
+    ports:
+      - "8080:8080"
+    command: webserver
+    networks:
+      - airflow-net
+
+  airflow-scheduler:
+    build:
+      context: .
+      dockerfile: airflow.dockerfile
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__WEBSERVER__SECRET_KEY: "6FG_Lrgt7uE4xqyXHoQSryr7M9ua5c1B2Klo3q_ZBls"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./data:/opt/airflow/data
+    command: scheduler
+    networks:
+      - airflow-net
+
   mlflow:
     build:
       context: .
@@ -16,6 +60,12 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./mlflow_data:/home/mlflow_data/
+      - ./mlflow_data:/home/mlflow_data
     networks:
-      - default
+      - airflow-net
+
+volumes:
+  postgres-db-volume:
+
+networks:
+  airflow-net:
