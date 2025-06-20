@@ -1,0 +1,7 @@
+{
+  "id": "01978d30-6eef-7f21-9835-471fcc45c464",
+  "name": "nyc-taxi-monitoring",
+  "description": "Monitoring fare amount median and row counts",
+  "org_id": null,
+  "version": "2"
+}
